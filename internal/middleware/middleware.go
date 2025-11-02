@@ -7,7 +7,7 @@ import (
 
 type contextKey string
 
-const APIVersionKey contextKey = "api.version"
+const APIVersionKey contextKey = contextKey("api.version")
 
 func APIVersionCtx(version string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {

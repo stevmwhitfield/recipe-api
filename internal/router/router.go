@@ -8,11 +8,11 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/go-chi/httprate"
 	"github.com/go-chi/render"
-	"github.com/stevmwhitfield/recipe-api/internal/handler"
+	"github.com/stevmwhitfield/recipe-api/internal/app"
 	customMiddleware "github.com/stevmwhitfield/recipe-api/internal/middleware"
 )
 
-func InitRoutes() *chi.Mux {
+func InitRoutes(app *app.Application) *chi.Mux {
 	r := chi.NewRouter()
 
 	// Middleware
@@ -33,15 +33,12 @@ func InitRoutes() *chi.Mux {
 	}))
 
 	// Handlers
-	r.Get("/", handler.Root)
-	r.Get("/ping", handler.Ping)
-	r.Get("/panic", handler.Panic)
-
-	recipeHandler := handler.NewRecipeHandler()
+	r.Get("/", app.BaseHandler.Root)
+	r.Get("/ping", app.BaseHandler.Ping)
 
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Use(customMiddleware.APIVersionCtx("v1"))
-		r.Mount("/recipes", recipeHandler.Routes())
+		r.Mount("/recipes", app.RecipeHandler.Routes())
 	})
 
 	return r

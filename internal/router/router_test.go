@@ -5,23 +5,18 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/stevmwhitfield/recipe-api/internal/app"
 	"github.com/stevmwhitfield/recipe-api/internal/router"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPanicRecovery(t *testing.T) {
-	r := router.InitRoutes()
-
-	req := httptest.NewRequest(http.MethodGet, "/panic", nil)
-	w := httptest.NewRecorder()
-
-	r.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
-}
-
 func TestRecipeRoutes(t *testing.T) {
-	r := router.InitRoutes()
+	app, err := app.NewApplication()
+	if err != nil {
+		t.Fatalf("failed to init app: %v+", err)
+	}
+
+	r := router.InitRoutes(app)
 
 	tests := []struct {
 		name       string

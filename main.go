@@ -3,20 +3,32 @@ package main
 import (
 	"context"
 	"errors"
+	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"github.com/stevmwhitfield/recipe-api/internal/app"
 	"github.com/stevmwhitfield/recipe-api/internal/router"
 )
 
 func main() {
-	r := router.InitRoutes()
+	var port int
+	flag.IntVar(&port, "port", 3000, "go server port")
+	flag.Parse()
 
+	app, err := app.NewApplication()
+	if err != nil {
+		panic(err)
+	}
+	defer app.DB.Close()
+
+	r := router.InitRoutes(app)
 	s := &http.Server{
-		Addr:         ":3000",
+		Addr:         fmt.Sprintf(":%d", port),
 		Handler:      r,
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
@@ -26,6 +38,7 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
+	app.Logger.Info(fmt.Sprintf("starting server on port %d", port))
 	go func() {
 		if err := s.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatal(err)
