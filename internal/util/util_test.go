@@ -17,12 +17,11 @@ func TestWriteJSON(t *testing.T) {
 	w := httptest.NewRecorder()
 	data := util.Envelope{"message": "test"}
 
-	err := util.WriteJSON(w, http.StatusOK, data)
+	util.WriteJSON(w, http.StatusOK, data)
 
 	var body util.Envelope
 	json.Unmarshal(w.Body.Bytes(), &body)
 
-	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Equal(t, "application/json", w.Header().Get("Content-Type"))
 	assert.Equal(t, data, body)

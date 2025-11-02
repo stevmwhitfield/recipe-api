@@ -3,6 +3,7 @@ package util
 import (
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -11,17 +12,20 @@ import (
 
 type Envelope map[string]interface{}
 
-func WriteJSON(w http.ResponseWriter, status int, data Envelope) error {
+func WriteJSON(w http.ResponseWriter, status int, data Envelope) {
 	js, err := json.MarshalIndent(data, "", " ")
 	if err != nil {
-		return err
+		slog.Error("failed to marshal json", "error", err)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"error": "internal server error"}`))
+		return
 	}
 
 	js = append(js, '\n')
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	w.Write(js)
-	return nil
 }
 
 func ReadIDParam(r *http.Request) (string, error) {

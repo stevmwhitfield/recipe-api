@@ -87,7 +87,7 @@ func TestRecipeHandler(t *testing.T) {
 				m.On("ListRecipes").Return(nil, errors.New("database error"))
 			},
 			wantCode: http.StatusInternalServerError,
-			wantBody: util.Envelope{"error": "internal server error"},
+			wantBody: util.Envelope{"error": "failed to fetch recipes"},
 		},
 		{
 			name:   "create recipe",
@@ -97,7 +97,7 @@ func TestRecipeHandler(t *testing.T) {
 			setupMock: func(m *MockRecipeStore) {
 				m.On("CreateRecipe", mock.AnythingOfType("*store.Recipe")).Return(&store.Recipe{Name: "Classic Pancakes"}, nil)
 			},
-			wantCode: http.StatusInternalServerError,
+			wantCode: http.StatusCreated,
 			wantBody: util.Envelope{"recipe": &store.Recipe{Name: "Classic Pancakes"}},
 		},
 	}

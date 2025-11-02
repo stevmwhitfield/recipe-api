@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/stevmwhitfield/recipe-api/internal/middleware"
 	utils "github.com/stevmwhitfield/recipe-api/internal/util"
 )
 
@@ -18,7 +19,8 @@ func NewBaseHandler(l *slog.Logger) *BaseHandler {
 }
 
 func (h *BaseHandler) Root(w http.ResponseWriter, r *http.Request) {
-	utils.WriteJSON(w, http.StatusOK, utils.Envelope{"status": "ok", "version": "v1"})
+	v := r.Context().Value(middleware.APIVersionKey).(string)
+	utils.WriteJSON(w, http.StatusOK, utils.Envelope{"status": "ok", "version": v})
 }
 
 func (h *BaseHandler) Ping(w http.ResponseWriter, r *http.Request) {

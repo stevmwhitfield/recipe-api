@@ -4,12 +4,18 @@ import (
 	"database/sql"
 	"fmt"
 	"io/fs"
+	"os"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/pressly/goose/v3"
 )
 
 func Open() (*sql.DB, error) {
+	path := os.Getenv("DB_PATH")
+	if path == "" {
+		path = "./internal/data/recipes.db"
+	}
+
 	db, err := sql.Open("sqlite3", "./internal/data/recipes.db")
 	if err != nil {
 		return nil, fmt.Errorf("db: open %w", err)

@@ -194,7 +194,7 @@ func (s *SQLiteRecipeStore) UpdateRecipe(recipe *Recipe) (*Recipe, error) {
 
 	query := `
 		UPDATE recipes
-		SET name = ? servings = ? prep_time_seconds = ? cook_time_seconds = ?
+		SET name = ?, servings = ?, prep_time_seconds = ?, cook_time_seconds = ?
 		WHERE id = ?;
 	`
 
@@ -228,6 +228,11 @@ func (s *SQLiteRecipeStore) UpdateRecipe(recipe *Recipe) (*Recipe, error) {
 		}
 	}
 
+	_, err = tx.Exec(`DELETE FROM instructions WHERE recipe_id = ?`, recipe.ID)
+	if err != nil {
+		return nil, err
+	}
+
 	for _, i := range recipe.Instructions {
 		query := `
 			INSERT INTO instructions (id, recipe_id, step_number, description)
@@ -238,6 +243,11 @@ func (s *SQLiteRecipeStore) UpdateRecipe(recipe *Recipe) (*Recipe, error) {
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	_, err = tx.Exec(`DELETE FROM recipe_tag WHERE recipe_id = ?`, recipe.ID)
+	if err != nil {
+		return nil, err
 	}
 
 	for _, t := range recipe.Tags {
@@ -252,7 +262,12 @@ func (s *SQLiteRecipeStore) UpdateRecipe(recipe *Recipe) (*Recipe, error) {
 		}
 	}
 
-	return recipe, tx.Commit()
+	err = tx.Commit()
+	if err != nil {
+		return nil, err
+	}
+
+	return recipe, nil
 }
 
 func (s *SQLiteRecipeStore) DeleteRecipe(id string) error {

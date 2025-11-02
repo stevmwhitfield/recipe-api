@@ -60,6 +60,30 @@ func (h *RecipeHandler) CreateRecipe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if recipe.Name == "" {
+		h.logger.Error("CreateRecipe", "error", err)
+		util.WriteJSON(w, http.StatusBadRequest, util.Envelope{"error": "name cannot be blank"})
+		return
+	}
+
+	if recipe.Servings < 1 {
+		h.logger.Error("CreateRecipe", "error", err)
+		util.WriteJSON(w, http.StatusBadRequest, util.Envelope{"error": "servings must be at least 1"})
+		return
+	}
+
+	if recipe.PrepTimeSeconds < 0 {
+		h.logger.Error("CreateRecipe", "error", err)
+		util.WriteJSON(w, http.StatusBadRequest, util.Envelope{"error": "prep time cannot be a negative value"})
+		return
+	}
+
+	if recipe.CookTimeSeconds < 0 {
+		h.logger.Error("CreateRecipe", "error", err)
+		util.WriteJSON(w, http.StatusBadRequest, util.Envelope{"error": "cook time cannot be a negative value"})
+		return
+	}
+
 	id, err := uuid.NewV7()
 	if err != nil {
 		h.logger.Error("CreateRecipe", "error", err)
@@ -180,7 +204,7 @@ func (h *RecipeHandler) DeleteRecipe(w http.ResponseWriter, r *http.Request) {
 
 	err = h.recipeStore.DeleteRecipe(recipeID)
 	if err == sql.ErrNoRows {
-		http.Error(w, "recipe not found", http.StatusNotFound)
+		http.NotFound(w, r)
 		return
 	}
 	if err != nil {
