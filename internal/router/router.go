@@ -39,6 +39,7 @@ func InitRoutes(app *app.Application) *chi.Mux {
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Use(customMiddleware.APIVersionCtx("v1"))
 		r.Mount("/recipes", app.RecipeHandler.Routes())
+		r.Mount("/tags", app.TagHandler.Routes())
 	})
 
 	return r

@@ -13,13 +13,48 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestWriteJSON(t *testing.T) {
-	w := httptest.NewRecorder()
+func TestWriteJSON_Envelope(t *testing.T) {
 	data := util.Envelope{"message": "test"}
+
+	w := httptest.NewRecorder()
 
 	util.WriteJSON(w, http.StatusOK, data)
 
 	var body util.Envelope
+	json.Unmarshal(w.Body.Bytes(), &body)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, "application/json", w.Header().Get("Content-Type"))
+	assert.Equal(t, data, body)
+}
+
+func TestWriteJSON_Struct(t *testing.T) {
+	type res struct {
+		Message string `json:"message"`
+		Count   int64  `json:"count"`
+	}
+	data := res{Message: "ok", Count: 1}
+
+	w := httptest.NewRecorder()
+
+	util.WriteJSON(w, http.StatusOK, data)
+
+	var body res
+	json.Unmarshal(w.Body.Bytes(), &body)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, "application/json", w.Header().Get("Content-Type"))
+	assert.Equal(t, data, body)
+}
+
+func TestWriteJSON_Slice(t *testing.T) {
+	data := []string{"one", "two"}
+
+	w := httptest.NewRecorder()
+
+	util.WriteJSON(w, http.StatusOK, data)
+
+	var body []string
 	json.Unmarshal(w.Body.Bytes(), &body)
 
 	assert.Equal(t, http.StatusOK, w.Code)

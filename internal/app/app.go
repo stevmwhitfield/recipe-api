@@ -14,6 +14,7 @@ type Application struct {
 	Logger        *slog.Logger
 	BaseHandler   *handler.BaseHandler
 	RecipeHandler *handler.RecipeHandler
+	TagHandler    *handler.TagHandler
 	DB            *sql.DB
 }
 
@@ -34,15 +35,18 @@ func NewApplication() (*Application, error) {
 
 	// Stores
 	recipeStore := store.NewSQLiteRecipeStore(db)
+	tagStore := store.NewSQLiteTagStore(db)
 
 	// Handlers
 	baseHandler := handler.NewBaseHandler(logger)
 	recipeHandler := handler.NewRecipeHandler(logger, recipeStore)
+	tagHandler := handler.NewTagHandler(logger, tagStore)
 
 	app := &Application{
 		Logger:        logger,
 		BaseHandler:   baseHandler,
 		RecipeHandler: recipeHandler,
+		TagHandler:    tagHandler,
 		DB:            db,
 	}
 

@@ -12,7 +12,7 @@ import (
 
 type Envelope map[string]interface{}
 
-func WriteJSON(w http.ResponseWriter, status int, data Envelope) {
+func WriteJSON(w http.ResponseWriter, status int, data interface{}) {
 	js, err := json.MarshalIndent(data, "", " ")
 	if err != nil {
 		slog.Error("failed to marshal json", "error", err)
@@ -38,4 +38,12 @@ func ReadIDParam(r *http.Request) (string, error) {
 	}
 
 	return idParam, nil
+}
+
+func GenerateUUID() (string, error) {
+	id, err := uuid.NewV7()
+	if err != nil {
+		return "", err
+	}
+	return id.String(), nil
 }
