@@ -2,41 +2,9 @@ package store
 
 import (
 	"database/sql"
-	"time"
+
+	"github.com/stevmwhitfield/recipe-api/internal/model"
 )
-
-type Recipe struct {
-	ID              string        `json:"id"`
-	Slug            string        `json:"slug"`
-	Name            string        `json:"name"`
-	Servings        int           `json:"servings"`
-	PrepTimeSeconds int           `json:"prepTimeSeconds"`
-	CookTimeSeconds int           `json:"cookTimeSeconds"`
-	Ingredients     []Ingredient  `json:"ingredients"`
-	Instructions    []Instruction `json:"instructions"`
-	Tags            []Tag         `json:"tags"`
-	CreatedAt       time.Time     `json:"createdAt"`
-	UpdatedAt       time.Time     `json:"updatedAt"`
-}
-
-type Ingredient struct {
-	ID       string  `json:"id"`
-	Name     string  `json:"name"`
-	Quantity float64 `json:"quantity"`
-	Unit     string  `json:"unit"`
-	Note     string  `json:"note"`
-}
-
-type Instruction struct {
-	ID          string `json:"id"`
-	StepNumber  int    `json:"stepNumber"`
-	Description string `json:"description"`
-}
-
-type Tag struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-}
 
 type SQLiteRecipeStore struct {
 	db *sql.DB
@@ -47,14 +15,14 @@ func NewSQLiteRecipeStore(db *sql.DB) *SQLiteRecipeStore {
 }
 
 type RecipeStore interface {
-	ListRecipes() ([]Recipe, error)
-	CreateRecipe(*Recipe) (*Recipe, error)
-	GetRecipeByID(id string) (*Recipe, error)
-	UpdateRecipe(*Recipe) (*Recipe, error)
+	ListRecipes() ([]model.Recipe, error)
+	CreateRecipe(*model.Recipe) (*model.Recipe, error)
+	GetRecipeByID(id string) (*model.Recipe, error)
+	UpdateRecipe(*model.Recipe) (*model.Recipe, error)
 	DeleteRecipe(id string) error
 }
 
-func (s *SQLiteRecipeStore) ListRecipes() ([]Recipe, error) {
+func (s *SQLiteRecipeStore) ListRecipes() ([]model.Recipe, error) {
 	query := `
 		SELECT id, slug, name, servings, prep_time_seconds, cook_time_seconds, created_at, updated_at 
 		FROM recipes
@@ -67,9 +35,9 @@ func (s *SQLiteRecipeStore) ListRecipes() ([]Recipe, error) {
 	}
 	defer rows.Close()
 
-	var recipes []Recipe
+	var recipes []model.Recipe
 	for rows.Next() {
-		var r Recipe
+		var r model.Recipe
 		err = rows.Scan(&r.ID, &r.Slug, &r.Name, &r.Servings, &r.PrepTimeSeconds, &r.CookTimeSeconds, &r.CreatedAt, &r.UpdatedAt)
 		if err != nil {
 			return nil, err
@@ -95,7 +63,7 @@ func (s *SQLiteRecipeStore) ListRecipes() ([]Recipe, error) {
 	return recipes, nil
 }
 
-func (s *SQLiteRecipeStore) CreateRecipe(recipe *Recipe) (*Recipe, error) {
+func (s *SQLiteRecipeStore) CreateRecipe(recipe *model.Recipe) (*model.Recipe, error) {
 	tx, err := s.db.Begin()
 	if err != nil {
 		return nil, err
@@ -156,8 +124,8 @@ func (s *SQLiteRecipeStore) CreateRecipe(recipe *Recipe) (*Recipe, error) {
 	return recipe, nil
 }
 
-func (s *SQLiteRecipeStore) GetRecipeByID(id string) (*Recipe, error) {
-	r := &Recipe{}
+func (s *SQLiteRecipeStore) GetRecipeByID(id string) (*model.Recipe, error) {
+	r := &model.Recipe{}
 	query := `
 		SELECT id, slug, name, servings, prep_time_seconds, cook_time_seconds, created_at, updated_at 
 		FROM recipes
@@ -185,7 +153,7 @@ func (s *SQLiteRecipeStore) GetRecipeByID(id string) (*Recipe, error) {
 	return r, nil
 }
 
-func (s *SQLiteRecipeStore) UpdateRecipe(recipe *Recipe) (*Recipe, error) {
+func (s *SQLiteRecipeStore) UpdateRecipe(recipe *model.Recipe) (*model.Recipe, error) {
 	tx, err := s.db.Begin()
 	if err != nil {
 		return nil, err
@@ -292,7 +260,7 @@ func (s *SQLiteRecipeStore) DeleteRecipe(id string) error {
 	return nil
 }
 
-func (s *SQLiteRecipeStore) getIngredientsForRecipe(recipeID string) ([]Ingredient, error) {
+func (s *SQLiteRecipeStore) getIngredientsForRecipe(recipeID string) ([]model.Ingredient, error) {
 	query := `
 		SELECT i.id, i.name, ri.quantity, ri.unit, ri.note
 		FROM recipe_ingredient ri
@@ -306,9 +274,9 @@ func (s *SQLiteRecipeStore) getIngredientsForRecipe(recipeID string) ([]Ingredie
 	}
 	defer rows.Close()
 
-	ingredients := []Ingredient{}
+	ingredients := []model.Ingredient{}
 	for rows.Next() {
-		var i Ingredient
+		var i model.Ingredient
 		err = rows.Scan(&i.ID, &i.Name, &i.Quantity, &i.Unit, &i.Note)
 		if err != nil {
 			return nil, err
@@ -318,7 +286,7 @@ func (s *SQLiteRecipeStore) getIngredientsForRecipe(recipeID string) ([]Ingredie
 	return ingredients, rows.Err()
 }
 
-func (s *SQLiteRecipeStore) getInstructionsForRecipe(recipeID string) ([]Instruction, error) {
+func (s *SQLiteRecipeStore) getInstructionsForRecipe(recipeID string) ([]model.Instruction, error) {
 	query := `
 		SELECT id, step_number, description
 		FROM instructions
@@ -332,9 +300,9 @@ func (s *SQLiteRecipeStore) getInstructionsForRecipe(recipeID string) ([]Instruc
 	}
 	defer rows.Close()
 
-	instructions := []Instruction{}
+	instructions := []model.Instruction{}
 	for rows.Next() {
-		var i Instruction
+		var i model.Instruction
 		err = rows.Scan(&i.ID, &i.StepNumber, &i.Description)
 		if err != nil {
 			return nil, err
@@ -344,7 +312,7 @@ func (s *SQLiteRecipeStore) getInstructionsForRecipe(recipeID string) ([]Instruc
 	return instructions, rows.Err()
 }
 
-func (s *SQLiteRecipeStore) getTagsForRecipe(recipeID string) ([]Tag, error) {
+func (s *SQLiteRecipeStore) getTagsForRecipe(recipeID string) ([]model.Tag, error) {
 	query := `
 		SELECT t.id, t.name
 		FROM recipe_tag rt
@@ -358,9 +326,9 @@ func (s *SQLiteRecipeStore) getTagsForRecipe(recipeID string) ([]Tag, error) {
 	}
 	defer rows.Close()
 
-	tags := []Tag{}
+	tags := []model.Tag{}
 	for rows.Next() {
-		var t Tag
+		var t model.Tag
 		err = rows.Scan(&t.ID, &t.Name)
 		if err != nil {
 			return nil, err

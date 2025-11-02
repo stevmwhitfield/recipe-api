@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/gosimple/slug"
+	"github.com/stevmwhitfield/recipe-api/internal/model"
 	"github.com/stevmwhitfield/recipe-api/internal/store"
 	"github.com/stevmwhitfield/recipe-api/internal/util"
 )
@@ -53,7 +54,7 @@ func (h *RecipeHandler) ListRecipes(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *RecipeHandler) CreateRecipe(w http.ResponseWriter, r *http.Request) {
-	var recipe store.Recipe
+	var recipe model.Recipe
 	err := json.NewDecoder(r.Body).Decode(&recipe)
 	if err != nil {
 		h.logger.Error("CreateRecipe", "error", err)
@@ -133,9 +134,9 @@ func (h *RecipeHandler) UpdateRecipe(w http.ResponseWriter, r *http.Request) {
 		Servings        *int                `json:"servings"`
 		PrepTimeSeconds *int                `json:"prepTimeSeconds"`
 		CookTimeSeconds *int                `json:"cookTimeSeconds"`
-		Ingredients     []store.Ingredient  `json:"ingredients"`
-		Instructions    []store.Instruction `json:"instructions"`
-		Tags            []store.Tag         `json:"tags"`
+		Ingredients     []model.Ingredient  `json:"ingredients"`
+		Instructions    []model.Instruction `json:"instructions"`
+		Tags            []model.Tag         `json:"tags"`
 	}
 
 	err = json.NewDecoder(r.Body).Decode(&recipeUpdateRequest)
@@ -205,7 +206,7 @@ func (h *RecipeHandler) DeleteRecipe(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func validateRecipe(r *store.Recipe) error {
+func validateRecipe(r *model.Recipe) error {
 	if r.Name == "" {
 		return errors.New("name cannot be blank")
 	}

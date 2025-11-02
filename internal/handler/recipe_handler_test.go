@@ -13,7 +13,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/stevmwhitfield/recipe-api/internal/handler"
-	"github.com/stevmwhitfield/recipe-api/internal/store"
+	"github.com/stevmwhitfield/recipe-api/internal/model"
 	"github.com/stevmwhitfield/recipe-api/internal/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -25,31 +25,31 @@ type MockRecipeStore struct {
 	mock.Mock
 }
 
-func (m *MockRecipeStore) ListRecipes() ([]store.Recipe, error) {
+func (m *MockRecipeStore) ListRecipes() ([]model.Recipe, error) {
 	args := m.Called()
-	return args.Get(0).([]store.Recipe), args.Error(1)
+	return args.Get(0).([]model.Recipe), args.Error(1)
 }
-func (m *MockRecipeStore) CreateRecipe(r *store.Recipe) (*store.Recipe, error) {
+func (m *MockRecipeStore) CreateRecipe(r *model.Recipe) (*model.Recipe, error) {
 	args := m.Called(r)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*store.Recipe), args.Error(1)
+	return args.Get(0).(*model.Recipe), args.Error(1)
 
 }
-func (m *MockRecipeStore) GetRecipeByID(id string) (*store.Recipe, error) {
+func (m *MockRecipeStore) GetRecipeByID(id string) (*model.Recipe, error) {
 	args := m.Called(id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*store.Recipe), args.Error(1)
+	return args.Get(0).(*model.Recipe), args.Error(1)
 }
-func (m *MockRecipeStore) UpdateRecipe(r *store.Recipe) (*store.Recipe, error) {
+func (m *MockRecipeStore) UpdateRecipe(r *model.Recipe) (*model.Recipe, error) {
 	args := m.Called(r)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*store.Recipe), args.Error(1)
+	return args.Get(0).(*model.Recipe), args.Error(1)
 }
 func (m *MockRecipeStore) DeleteRecipe(id string) error {
 	args := m.Called(id)
@@ -84,7 +84,7 @@ func TestRecipeHandler(t *testing.T) {
 			method: http.MethodGet,
 			uri:    "/",
 			setupMock: func(m *MockRecipeStore) {
-				m.On("ListRecipes").Return([]store.Recipe{}, errors.New("database error"))
+				m.On("ListRecipes").Return([]model.Recipe{}, errors.New("database error"))
 			},
 			wantCode: http.StatusInternalServerError,
 			wantBody: util.Envelope{"error": "failed to fetch recipes"},
@@ -95,8 +95,8 @@ func TestRecipeHandler(t *testing.T) {
 			uri:    "/",
 			data:   getNewRecipeData(),
 			setupMock: func(m *MockRecipeStore) {
-				m.On("CreateRecipe", mock.AnythingOfType("*store.Recipe")).Return(
-					&store.Recipe{
+				m.On("CreateRecipe", mock.AnythingOfType("*model.Recipe")).Return(
+					&model.Recipe{
 						Name:            "Classic Pancakes",
 						Servings:        4,
 						PrepTimeSeconds: 600,
@@ -105,7 +105,7 @@ func TestRecipeHandler(t *testing.T) {
 				)
 			},
 			wantCode: http.StatusCreated,
-			wantBody: util.Envelope{"recipe": &store.Recipe{
+			wantBody: util.Envelope{"recipe": &model.Recipe{
 				Name:            "Classic Pancakes",
 				Servings:        4,
 				PrepTimeSeconds: 600,
@@ -144,10 +144,10 @@ func TestRecipeHandler(t *testing.T) {
 	}
 }
 
-func getListRecipeData() []store.Recipe {
+func getListRecipeData() []model.Recipe {
 	baseTime, _ := time.Parse(time.RFC3339, "2025-11-01T19:32:00Z")
 
-	return []store.Recipe{
+	return []model.Recipe{
 		{
 			ID:              "019a40de-02cd-7865-84ae-c038b75596f5",
 			Slug:            "classic-pancakes",
@@ -155,18 +155,18 @@ func getListRecipeData() []store.Recipe {
 			Servings:        4,
 			PrepTimeSeconds: 600,
 			CookTimeSeconds: 900,
-			Ingredients: []store.Ingredient{
+			Ingredients: []model.Ingredient{
 				{ID: "i1", Name: "Flour", Quantity: 2, Unit: "cup", Note: "All-purpose"},
 				{ID: "i2", Name: "Milk", Quantity: 1, Unit: "cup", Note: "Whole"},
 				{ID: "i3", Name: "Eggs", Quantity: 2, Unit: "", Note: "Large"},
 				{ID: "i4", Name: "Butter", Quantity: 2, Unit: "tbsp", Note: "Melted"},
 			},
-			Instructions: []store.Instruction{
+			Instructions: []model.Instruction{
 				{ID: "s1", StepNumber: 1, Description: "Whisk together flour, milk, and eggs in a large bowl."},
 				{ID: "s2", StepNumber: 2, Description: "Add melted butter and stir until smooth."},
 				{ID: "s3", StepNumber: 3, Description: "Pour 1/4 cup batter onto a hot griddle and cook until golden."},
 			},
-			Tags: []store.Tag{
+			Tags: []model.Tag{
 				{ID: "t1", Name: "Breakfast"},
 				{ID: "t2", Name: "Easy"},
 			},
@@ -180,20 +180,20 @@ func getListRecipeData() []store.Recipe {
 			Servings:        6,
 			PrepTimeSeconds: 900,
 			CookTimeSeconds: 3600,
-			Ingredients: []store.Ingredient{
+			Ingredients: []model.Ingredient{
 				{ID: "i5", Name: "Spaghetti", Quantity: 500, Unit: "g", Note: ""},
 				{ID: "i6", Name: "Ground Beef", Quantity: 500, Unit: "g", Note: "Lean"},
 				{ID: "i7", Name: "Tomato Sauce", Quantity: 2, Unit: "cups", Note: ""},
 				{ID: "i8", Name: "Onion", Quantity: 1, Unit: "", Note: "Chopped"},
 				{ID: "i9", Name: "Garlic", Quantity: 2, Unit: "cloves", Note: "Minced"},
 			},
-			Instructions: []store.Instruction{
+			Instructions: []model.Instruction{
 				{ID: "s4", StepNumber: 1, Description: "Cook spaghetti according to package directions."},
 				{ID: "s5", StepNumber: 2, Description: "Brown beef with onion and garlic in a pan."},
 				{ID: "s6", StepNumber: 3, Description: "Add tomato sauce and simmer for 30 minutes."},
 				{ID: "s7", StepNumber: 4, Description: "Serve sauce over cooked spaghetti."},
 			},
-			Tags: []store.Tag{
+			Tags: []model.Tag{
 				{ID: "t3", Name: "Dinner"},
 				{ID: "t4", Name: "Italian"},
 				{ID: "t5", Name: "Pasta"},
