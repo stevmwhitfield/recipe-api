@@ -16,7 +16,7 @@ func Open() (*sql.DB, error) {
 		path = "./internal/data/recipes.db"
 	}
 
-	db, err := sql.Open("sqlite3", "./internal/data/recipes.db")
+	db, err := sql.Open("sqlite3", path)
 	if err != nil {
 		return nil, fmt.Errorf("db: open %w", err)
 	}

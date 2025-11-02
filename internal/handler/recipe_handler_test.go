@@ -84,7 +84,7 @@ func TestRecipeHandler(t *testing.T) {
 			method: http.MethodGet,
 			uri:    "/",
 			setupMock: func(m *MockRecipeStore) {
-				m.On("ListRecipes").Return(nil, errors.New("database error"))
+				m.On("ListRecipes").Return([]store.Recipe{}, errors.New("database error"))
 			},
 			wantCode: http.StatusInternalServerError,
 			wantBody: util.Envelope{"error": "failed to fetch recipes"},
@@ -95,10 +95,22 @@ func TestRecipeHandler(t *testing.T) {
 			uri:    "/",
 			data:   getNewRecipeData(),
 			setupMock: func(m *MockRecipeStore) {
-				m.On("CreateRecipe", mock.AnythingOfType("*store.Recipe")).Return(&store.Recipe{Name: "Classic Pancakes"}, nil)
+				m.On("CreateRecipe", mock.AnythingOfType("*store.Recipe")).Return(
+					&store.Recipe{
+						Name:            "Classic Pancakes",
+						Servings:        4,
+						PrepTimeSeconds: 600,
+						CookTimeSeconds: 900,
+					}, nil,
+				)
 			},
 			wantCode: http.StatusCreated,
-			wantBody: util.Envelope{"recipe": &store.Recipe{Name: "Classic Pancakes"}},
+			wantBody: util.Envelope{"recipe": &store.Recipe{
+				Name:            "Classic Pancakes",
+				Servings:        4,
+				PrepTimeSeconds: 600,
+				CookTimeSeconds: 900,
+			}},
 		},
 	}
 
@@ -207,7 +219,7 @@ func getNewRecipeData() io.Reader {
 		"instructions": [
 			{"stepNumber": 1, "description": "Whisk together flour, milk, and eggs in a large bowl."},
 			{"stepNumber": 2, "description": "Add melted butter and stir until smooth."},
-			{"stepNumber": 3, "description": "Pour 1/4 cup batter onto a hot griddle and cook until golden."},
+			{"stepNumber": 3, "description": "Pour 1/4 cup batter onto a hot griddle and cook until golden."}
 		],
 		"tagIds": ["t1", "t2"]
 	}`

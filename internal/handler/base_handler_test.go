@@ -1,12 +1,14 @@
 package handler_test
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/stevmwhitfield/recipe-api/internal/handler"
+	"github.com/stevmwhitfield/recipe-api/internal/middleware"
 	"github.com/stevmwhitfield/recipe-api/internal/util"
 	"github.com/stretchr/testify/assert"
 )
@@ -16,6 +18,9 @@ func TestBaseHandler(t *testing.T) {
 
 	t.Run("root", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/", nil)
+		ctx := context.WithValue(req.Context(), middleware.APIVersionKey, "v1")
+		req = req.WithContext(ctx)
+
 		w := httptest.NewRecorder()
 
 		h.Root(w, req)

@@ -3,6 +3,7 @@ package handler
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 
@@ -60,27 +61,9 @@ func (h *RecipeHandler) CreateRecipe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if recipe.Name == "" {
+	if err := validateRecipe(&recipe); err != nil {
 		h.logger.Error("CreateRecipe", "error", err)
-		util.WriteJSON(w, http.StatusBadRequest, util.Envelope{"error": "name cannot be blank"})
-		return
-	}
-
-	if recipe.Servings < 1 {
-		h.logger.Error("CreateRecipe", "error", err)
-		util.WriteJSON(w, http.StatusBadRequest, util.Envelope{"error": "servings must be at least 1"})
-		return
-	}
-
-	if recipe.PrepTimeSeconds < 0 {
-		h.logger.Error("CreateRecipe", "error", err)
-		util.WriteJSON(w, http.StatusBadRequest, util.Envelope{"error": "prep time cannot be a negative value"})
-		return
-	}
-
-	if recipe.CookTimeSeconds < 0 {
-		h.logger.Error("CreateRecipe", "error", err)
-		util.WriteJSON(w, http.StatusBadRequest, util.Envelope{"error": "cook time cannot be a negative value"})
+		util.WriteJSON(w, http.StatusBadRequest, util.Envelope{"error": err.Error()})
 		return
 	}
 
@@ -184,6 +167,12 @@ func (h *RecipeHandler) UpdateRecipe(w http.ResponseWriter, r *http.Request) {
 		existingRecipe.Tags = recipeUpdateRequest.Tags
 	}
 
+	if err := validateRecipe(existingRecipe); err != nil {
+		h.logger.Error("CreateRecipe", "error", err)
+		util.WriteJSON(w, http.StatusBadRequest, util.Envelope{"error": err.Error()})
+		return
+	}
+
 	updatedRecipe, err := h.recipeStore.UpdateRecipe(existingRecipe)
 	if err != nil {
 		h.logger.Error("UpdateRecipe", "error", err)
@@ -214,4 +203,23 @@ func (h *RecipeHandler) DeleteRecipe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func validateRecipe(r *store.Recipe) error {
+	if r.Name == "" {
+		return errors.New("name cannot be blank")
+	}
+
+	if r.Servings < 1 {
+		return errors.New("servings must be at least 1")
+	}
+
+	if r.PrepTimeSeconds < 0 {
+		return errors.New("prep time cannot be a negative value")
+	}
+
+	if r.CookTimeSeconds < 0 {
+		return errors.New("cook time cannot be a negative value")
+	}
+	return nil
 }
